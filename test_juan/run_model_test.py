@@ -53,6 +53,8 @@ from tactis.gluon.metrics import compute_validation_metrics, compute_validation_
 from tactis.model.utils import check_memory
 import itertools
 import gc
+import time
+from tqdm import tqdm
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -136,10 +138,11 @@ class ParquetDataset(Dataset):
         # Process data in chunks to save memory
         chunk_size = self.max_samples
         total_samples = len(self.data) - self.context_length - self.prediction_length + 1
-        
-        for chunk_start in range(0, total_samples, chunk_size):
+
+        for chunk_start in tqdm(range(0, total_samples, chunk_size), desc="Loading data chunks"):
+            start_time = time.time()
             chunk_end = min(chunk_start + chunk_size, total_samples)
-            
+
             for i in range(chunk_start, chunk_end):
                 mask = create_mask(
                     self.data,
@@ -149,11 +152,12 @@ class ParquetDataset(Dataset):
                     self.prediction_length,
                 )
 
-                targets = self.data[TARGET_FEATURES].values[i : i + self.context_length + self.prediction_length].T
-                start_time = self.data.index[i]
-                
+                # Select only the necessary rows for this data entry
+                targets = self.data[TARGET_FEATURES].iloc[i : i + self.context_length + self.prediction_length].values.T
+                start_time_data = self.data.index[i]
+
                 data_entry = {
-                    FieldName.START: pd.Timestamp(start_time),
+                    FieldName.START: pd.Timestamp(start_time_data),
                     FieldName.TARGET: targets,
                     FieldName.FEAT_STATIC_REAL: self.data[ALL_STATIC_FEATURES]
                     .iloc[i : i + self.context_length + self.prediction_length]
@@ -166,10 +170,12 @@ class ParquetDataset(Dataset):
                     ].T,
                 }
                 yield data_entry
-            
+
             # Clear memory after processing each chunk
             torch.cuda.empty_cache()
             gc.collect()
+            end_time = time.time()
+            print(f"Chunk loading time: {end_time - start_time:.4f} seconds")
 
     def __len__(self):
         return len(self.data) - self.context_length - self.prediction_length + 1
@@ -285,6 +291,7 @@ def main(args):
             print(f"Initial GPU memory: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
         
         # Create datasets with memory management
+        print("Creating dataset...")
         dataset = ParquetDataset(
             parquet_file=DATA_FILE,
             freq=FREQ,
@@ -292,6 +299,7 @@ def main(args):
             prediction_length=PREDICTION_LENGTH,
             max_samples=MAX_SAMPLES_IN_MEMORY
         )
+        print("Dataset created.")
 
         # Adjust batch size based on available memory
         if torch.cuda.is_available() and not args.use_cpu:
@@ -305,12 +313,16 @@ def main(args):
         # Split into train and validation sets (80-20 split)
         total_length = len(dataset)
         train_length = int(0.8 * total_length)
+        print("Splitting dataset into train and validation sets...")
+        print(f"Total length: {total_length}")
+        print(f"Train length: {train_length}")
         
         # Load data in chunks
         train_data = []
         valid_data = []
         
         for i, data_entry in enumerate(dataset):
+            print(f"Processing data entry {i} of {total_length}")
             if i < train_length:
                 train_data.append(data_entry)
             else:
@@ -318,6 +330,7 @@ def main(args):
                 
             # Clear memory periodically
             if i % 1000 == 0:
+                print(f"Clearing memory after {i} data entries...")
                 torch.cuda.empty_cache()
                 gc.collect()
 
@@ -369,6 +382,7 @@ def main(args):
         }
 
         # Create the estimator with adjusted parameters
+        print("Creating estimator...")
         estimator = TACTiSEstimator(
             model_parameters=model_parameters,
             num_series=NUM_SERIES,
@@ -394,15 +408,18 @@ def main(args):
             cdf_normalization=False,
             num_parallel_samples=100,
         )
+        print("Estimator created.")
 
         if not args.evaluate:
             # Train with memory management
+            print("Starting training...")
             trained_net = estimator.train(
                 training_data=train_data,
                 validation_data=valid_data,
                 num_workers=args.num_workers if hasattr(args, 'num_workers') else 4,
                 prefetch_factor=2
             )
+            print("Training finished.")
         else:
             # Evaluate the model
             predictor = estimator.create_predictor(
