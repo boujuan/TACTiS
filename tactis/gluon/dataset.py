@@ -13,7 +13,7 @@ limitations under the License.
 
 import os
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Iterator
 
 import numpy as np
 import pandas as pd
@@ -537,3 +537,63 @@ def generate_backtesting_datasets(
     test_grouper = __FixedMultivariateGrouper(num_test_dates=num_test_dates)
 
     return metadata, train_grouper(train_data), test_grouper(test_data)
+
+
+class ParquetDataset(Dataset):
+    """
+    Loads a dataset from a Parquet file.
+
+    Parameters
+    ----------
+    file_path
+        Path to the Parquet file.
+    freq
+        Frequency of the time series data.
+    """
+
+    def __init__(self, file_path: Path, freq: str):
+        self.file_path = file_path
+        self.freq = freq
+        self.data = self._load_data()
+
+    def _load_data(self) -> List[DataEntry]:
+        df = pd.read_parquet(self.file_path)
+        data_entries = []
+
+        # Group by continuity group (if applicable) or create a single group
+        if "continuity_group" in df.columns:
+            groups = df.groupby("continuity_group")
+        else:
+            df["continuity_group"] = 0
+            groups = df.groupby("continuity_group")
+
+        for _, group_df in groups:
+            start_time = group_df["time"].min()
+            
+            # Prepare features
+            nd_cos_cols = [col for col in group_df.columns if "nd_cos_" in col]
+            nd_sin_cols = [col for col in group_df.columns if "nd_sin_" in col]
+            ws_horz_cols = [col for col in group_df.columns if "ws_horz_" in col]
+            ws_vert_cols = [col for col in group_df.columns if "ws_vert_" in col]
+
+            # Ensure all feature columns are present
+            all_feature_cols = nd_cos_cols + nd_sin_cols + ws_horz_cols + ws_vert_cols
+            if not all(col in group_df.columns for col in all_feature_cols):
+                raise ValueError("Missing feature columns in the Parquet file.")
+
+            # Create DataEntry
+            data_entry: DataEntry = {
+                FieldName.START: pd.Period(start_time, freq=self.freq),
+                FieldName.TARGET: group_df[ws_horz_cols + ws_vert_cols].values.T,  # Use wind speed vectors as target
+                FieldName.FEAT_DYNAMIC_REAL: group_df[nd_cos_cols + nd_sin_cols].values.T,
+                FieldName.FEAT_STATIC_CAT: [0],  # Placeholder, adjust if you have static categorical features
+            }
+            data_entries.append(data_entry)
+
+        return data_entries
+
+    def __iter__(self) -> Iterator[DataEntry]:
+        yield from self.data
+
+    def __len__(self) -> int:
+        return len(self.data)
