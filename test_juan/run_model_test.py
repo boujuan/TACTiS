@@ -4,7 +4,7 @@ import torch
 from gluonts.dataset.common import DataEntry, MetaData, Dataset, ListDataset
 from gluonts.dataset.field_names import FieldName
 from gluonts.dataset.multivariate_grouper import MultivariateGrouper
-from gluonts.transform import AddObservedValuesIndicator
+from gluonts.transform import AddObservedValuesIndicator, InstanceSplitter, ExpectedNumInstanceSampler, Chain
 from typing import List, Tuple, Optional, Iterator
 from gluonts.dataset.common import DataEntry, MetaData, Dataset, ListDataset
 from gluonts.dataset.field_names import FieldName
@@ -105,12 +105,11 @@ def create_mask(
     return mask
 
 # Add these constants at the top
-DEFAULT_BATCH_SIZE = 32  # Reduced from 256
-DEFAULT_ACCUMULATION_STEPS = 8  # To simulate larger batch size
-MAX_SAMPLES_IN_MEMORY = 1000  # Limit number of samples loaded at once
+DEFAULT_BATCH_SIZE = 32
+DEFAULT_ACCUMULATION_STEPS = 8
 
 class ParquetDataset(Dataset):
-    def __init__(self, parquet_file: str, freq: str, context_length: int, prediction_length: int, max_samples=MAX_SAMPLES_IN_MEMORY):
+    def __init__(self, parquet_file: str, freq: str):
         # Read the parquet file
         self.data = pd.read_parquet(parquet_file)
         
@@ -121,104 +120,27 @@ class ParquetDataset(Dataset):
             self.data.index = pd.to_datetime(self.data.index)
         
         self.freq = freq
-        self.context_length = context_length
-        self.prediction_length = prediction_length
-        self.max_samples = max_samples
-        self.metadata = MetaData(
-            freq=self.freq,
-            target=None,
-            feat_static_cat=[],
-            feat_static_real=[],
-            feat_dynamic_real=[],
-            feat_dynamic_cat=[],
-            prediction_length=self.prediction_length,
-        )
 
     def __iter__(self) -> Iterator[DataEntry]:
-        # Process data in chunks to save memory
-        chunk_size = self.max_samples
-        total_samples = len(self.data) - self.context_length - self.prediction_length + 1
+        for i in range(len(self.data)):
+            start_time_data = self.data.index[i]
 
-        for chunk_start in tqdm(range(0, total_samples, chunk_size), desc="Loading data chunks"):
-            start_time = time.time()
-            chunk_end = min(chunk_start + chunk_size, total_samples)
-
-            for i in range(chunk_start, chunk_end):
-                mask = create_mask(
-                    self.data,
-                    ALL_STATIC_FEATURES,
-                    ALL_DYNAMIC_FEATURES,
-                    self.context_length,
-                    self.prediction_length,
-                )
-
-                # Select only the necessary rows for this data entry
-                targets = self.data[TARGET_FEATURES].iloc[i : i + self.context_length + self.prediction_length].values.T
-                start_time_data = self.data.index[i]
-
-                data_entry = {
-                    FieldName.START: pd.Timestamp(start_time_data),
-                    FieldName.TARGET: targets,
-                    FieldName.FEAT_STATIC_REAL: self.data[ALL_STATIC_FEATURES]
-                    .iloc[i : i + self.context_length + self.prediction_length]
-                    .values.T,
-                    FieldName.FEAT_DYNAMIC_REAL: self.data[ALL_DYNAMIC_FEATURES]
-                    .iloc[i : i + self.context_length + self.prediction_length]
-                    .values.T,
-                    FieldName.OBSERVED_VALUES: mask[
-                        i : i + self.context_length + self.prediction_length
-                    ].T,
-                }
-                yield data_entry
-
-            # Clear memory after processing each chunk
-            torch.cuda.empty_cache()
-            gc.collect()
-            end_time = time.time()
-            print(f"Chunk loading time: {end_time - start_time:.4f} seconds")
+            data_entry = {
+                FieldName.START: pd.Timestamp(start_time_data, freq=self.freq),
+                FieldName.TARGET: self.data[TARGET_FEATURES].iloc[i].values,
+                FieldName.FEAT_STATIC_REAL: self.data[ALL_STATIC_FEATURES].iloc[i].values,
+                FieldName.FEAT_DYNAMIC_REAL: self.data[ALL_DYNAMIC_FEATURES].iloc[i].values,
+            }
+            yield data_entry
 
     def __len__(self):
-        return len(self.data) - self.context_length - self.prediction_length + 1
+        return len(self.data)
 
 def create_data_transformation(
-    dataset: Dataset,
     context_length: int,
     prediction_length: int,
-    mode: str,
-    cdf_normalization: bool = False,
 ) -> Transformation:
-    """
-    Create the data transformation for the TACTiS model.
-
-    Args:
-        dataset: The dataset to transform.
-        context_length: The length of the context.
-        prediction_length: The length of the prediction horizon.
-        mode: The mode of the transformation ("train", "validation", or "test").
-        cdf_normalization: Whether to apply CDF normalization to the target features.
-
-    Returns:
-        The data transformation.
-    """
-    if mode == "train":
-        instance_sampler = ValidationSplitSampler(
-            min_future=prediction_length,
-            past_length=context_length,
-            min_past=context_length,
-        )
-    elif mode == "validation":
-        instance_sampler = ValidationSplitSampler(
-            min_future=prediction_length,
-            past_length=context_length,
-            min_past=context_length,
-        )
-    elif mode == "test":
-        instance_sampler = TestSplitSampler()
-    else:
-        raise ValueError(f"Invalid mode: {mode}")
-
-    # Create the transformation
-    transformation = Chain(
+    return Chain(
         [
             AddObservedValuesIndicator(
                 target_field=FieldName.TARGET,
@@ -229,57 +151,19 @@ def create_data_transformation(
                 is_pad_field=FieldName.IS_PAD,
                 start_field=FieldName.START,
                 forecast_start_field=FieldName.FORECAST_START,
-                instance_sampler=instance_sampler,
+                instance_sampler=ExpectedNumInstanceSampler(
+                    num_instances=1,
+                    min_future=prediction_length,
+                ),
                 past_length=context_length,
                 future_length=prediction_length,
-                time_series_fields=[FieldName.FEAT_DYNAMIC_REAL, FieldName.OBSERVED_VALUES],
+                time_series_fields=[
+                    FieldName.FEAT_DYNAMIC_REAL,
+                    FieldName.OBSERVED_VALUES,
+                ],
             ),
         ]
     )
-
-    return transformation
-
-def create_datasets(
-    parquet_file: str,
-    freq: str,
-    context_length: int,
-    prediction_length: int,
-    train_frac: float = 0.8,
-    val_frac: float = 0.1,
-) -> Tuple[MetaData, Dataset, Dataset, Dataset]:
-    """
-    Create the training, validation, and test datasets.
-
-    Args:
-        parquet_file: The path to the Parquet file.
-        freq: The frequency of the data.
-        context_length: The length of the context.
-        prediction_length: The length of the prediction horizon.
-        train_frac: The fraction of the data to use for training.
-        val_frac: The fraction of the data to use for validation.
-
-    Returns:
-        A tuple containing the metadata, training dataset, validation dataset, and test dataset.
-    """
-    dataset = ParquetDataset(parquet_file, freq, context_length, prediction_length)
-    num_data = len(dataset)
-    num_train = int(num_data * train_frac)
-    num_val = int(num_data * val_frac)
-
-    train_data = ListDataset(
-        list(dataset)[:num_train],
-        freq=dataset.freq,
-    )
-    val_data = ListDataset(
-        list(dataset)[num_train : num_train + num_val],
-        freq=dataset.freq,
-    )
-    test_data = ListDataset(
-        list(dataset)[num_train + num_val :],
-        freq=dataset.freq,
-    )
-
-    return dataset.metadata, train_data, val_data, test_data
 
 def main(args):
     # Set random seed for reproducibility
@@ -290,14 +174,11 @@ def main(args):
         if torch.cuda.is_available() and not args.use_cpu:
             print(f"Initial GPU memory: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
         
-        # Create datasets with memory management
+        # Create dataset
         print("Creating dataset...")
         dataset = ParquetDataset(
             parquet_file=DATA_FILE,
             freq=FREQ,
-            context_length=CONTEXT_LENGTH,
-            prediction_length=PREDICTION_LENGTH,
-            max_samples=MAX_SAMPLES_IN_MEMORY
         )
         print("Dataset created.")
 
@@ -310,29 +191,28 @@ def main(args):
             print(f"Adjusted batch size: {adjusted_batch_size}")
             args.batch_size = adjusted_batch_size
 
+        # Create data transformation
+        transformation = create_data_transformation(
+            context_length=CONTEXT_LENGTH,
+            prediction_length=PREDICTION_LENGTH,
+        )
+
         # Split into train and validation sets (80-20 split)
         total_length = len(dataset)
         train_length = int(0.8 * total_length)
         print("Splitting dataset into train and validation sets...")
         print(f"Total length: {total_length}")
         print(f"Train length: {train_length}")
-        
-        # Load data in chunks
-        train_data = []
-        valid_data = []
-        
-        for i, data_entry in enumerate(dataset):
-            print(f"Processing data entry {i} of {total_length}")
-            if i < train_length:
-                train_data.append(data_entry)
-            else:
-                valid_data.append(data_entry)
-                
-            # Clear memory periodically
-            if i % 1000 == 0:
-                print(f"Clearing memory after {i} data entries...")
-                torch.cuda.empty_cache()
-                gc.collect()
+
+        train_data = ListDataset(
+            list(dataset)[:train_length],
+            freq=FREQ
+        )
+
+        valid_data = ListDataset(
+            list(dataset)[train_length:],
+            freq=FREQ
+        )
 
         # Create the model parameters
         model_parameters = {
@@ -466,87 +346,88 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seed", type=int, default=42, help="Seed.")
-    parser.add_argument("--num_workers", type=int, default=4, help="Number of multiprocessing workers.")
-    parser.add_argument("--batch_size", type=int, default=256, help="Batch Size.")
-    parser.add_argument("--epochs", type=int, default=1000, help="Epochs.")
-
+    # Model parameters
+    parser.add_argument("--checkpoint_dir", type=str, default=None, help="Directory to save checkpoints.")
+    parser.add_argument("--load_checkpoint", type=str, default=None, help="Checkpoint to load.")
     parser.add_argument(
-        "--optimizer", type=str, default="adam", choices=["rmsprop", "adam"], help="Optimizer to be used."
+        "--batch_size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help="Batch size for training.",
     )
     parser.add_argument(
-        "--checkpoint_dir",
-        type=str,
-        help="Folder to store all checkpoints in. This folder will be created automatically if it does not exist.",
-    )
-    parser.add_argument(
-        "--load_checkpoint", type=str, help="Checkpoint to start training from or a checkpoint to evaluate."
+        "--num_workers",
+        type=int,
+        default=4,
+        help="Number of workers for data loading.",
     )
     parser.add_argument(
         "--training_num_batches_per_epoch",
         type=int,
         default=512,
-        help="Number of batches in a single epoch of training.",
+        help="Number of batches per epoch for training.",
     )
     parser.add_argument(
-        "--log_subparams_every",
-        type=int,
-        default=10000,
-        help="Frequency of logging the epoch number and iteration number during training.",
-    )
-    parser.add_argument("--bagging_size", type=int, default=20, help="Bagging Size")
-
-    # Early stopping epochs based on total validation loss. -1 indicates no early stopping.
-    parser.add_argument("--early_stopping_epochs", type=int, default=50, help="Early stopping patience")
-
-    # HPARAMS
-    # General ones
-    parser.add_argument("--learning_rate", type=float, default=1e-3, help="Learning Rate")
-    parser.add_argument("--weight_decay", type=float, default=0, help="Weight Decay")
-    parser.add_argument("--clip_gradient", type=float, default=1e3, help="Clip Gradient")
-    parser.add_argument(
-        "--flow_series_embedding_dim",
-        type=int,
-        default=5,
-        help="Embedding dimension for the series for the flow.",
+        "--learning_rate",
+        type=float,
+        default=1e-3,
+        help="Learning rate for training.",
     )
     parser.add_argument(
-        "--copula_series_embedding_dim",
-        type=int,
-        default=5,
-        help="Embedding dimension for the series for the copula.",
+        "--weight_decay",
+        type=float,
+        default=1e-5,
+        help="Weight decay for training.",
     )
     parser.add_argument(
-        "--flow_input_encoder_layers",
-        type=int,
-        default=2,
-        help="Number of layers for the input encoder for the flow.",
+        "--clip_gradient",
+        type=float,
+        default=10.0,
+        help="Gradient clipping value for training.",
     )
     parser.add_argument(
-        "--copula_input_encoder_layers",
+        "--early_stopping_epochs",
         type=int,
-        default=2,
-        help="Number of layers for the input encoder for the copula.",
+        default=10,
+        help="Number of epochs to wait for improvement before early stopping.",
     )
     parser.add_argument(
         "--loss_normalization",
         type=str,
-        default="series",
-        choices=["none", "series", "batch"],
-        help="Normalization for the loss.",
-    )
-    parser.add_argument(
-        "--history_factor",
-        type=float,
-        default=2,
-        help="Factor to determine the history length w.r.t. prediction length.",
+        default="batch",
+        choices=["batch", "series", "none"],
+        help="Normalization mode for the loss.",
     )
 
-    # Encoder
+    # Encoders
+    parser.add_argument(
+        "--flow_series_embedding_dim",
+        type=int,
+        default=16,
+        help="Dimension for the flow series embedding.",
+    )
+    parser.add_argument(
+        "--copula_series_embedding_dim",
+        type=int,
+        default=16,
+        help="Dimension for the copula series embedding.",
+    )
+    parser.add_argument(
+        "--flow_input_encoder_layers",
+        type=int,
+        default=1,
+        help="Number of layers for the flow input encoder.",
+    )
+    parser.add_argument(
+        "--copula_input_encoder_layers",
+        type=int,
+        default=1,
+        help="Number of layers for the copula input encoder.",
+    )
     parser.add_argument(
         "--flow_encoder_num_layers",
         type=int,
-        default=2,
+        default=1,
         help="Number of layers for the flow encoder.",
     )
     parser.add_argument(
@@ -558,13 +439,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--flow_encoder_dim",
         type=int,
-        default=16,
+        default=8,
         help="Dimension for the flow encoder.",
     )
     parser.add_argument(
         "--copula_encoder_num_layers",
         type=int,
-        default=2,
+        default=1,
         help="Number of layers for the copula encoder.",
     )
     parser.add_argument(
@@ -576,7 +457,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--copula_encoder_dim",
         type=int,
-        default=16,
+        default=8,
         help="Dimension for the copula encoder.",
     )
 
@@ -596,7 +477,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--decoder_dim",
         type=int,
-        default=8,
+        default=4,
         help="Dimension for the decoder.",
     )
     parser.add_argument(
@@ -608,7 +489,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--decoder_mlp_dim",
         type=int,
-        default=48,
+        default=24,
         help="Dimension for the decoder MLP.",
     )
     parser.add_argument(
@@ -654,7 +535,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dsf_mlp_dim",
         type=int,
-        default=48,
+        default=24,
         help="Dimension for the DSF MLP.",
     )
 
@@ -700,6 +581,9 @@ if __name__ == "__main__":
     # A checkpoint must be provided for evaluation
     # Note evaluation is only supported after training the model in both phases.
     parser.add_argument("--evaluate", action="store_true", help="Evaluate for NLL and metrics.")
+
+    # Add seed argument
+    parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")
 
     args = parser.parse_args()
 
