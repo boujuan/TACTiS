@@ -29,6 +29,7 @@ def plot_single_forecast(
     target: pd.Series,
     axes: plt.Axes,
     locator: matplotlib.ticker.Locator,
+    title: str = "",
 ) -> None:
     """
     Plot the forecast for a single series, on the given Axes object.
@@ -115,6 +116,11 @@ def plot_single_forecast(
     xmax = forecast.index[-1] + (forecast.index[-1] - forecast.index[0])  # Beyond the limit of the plot
     axes.axvspan(xmin=xmin, xmax=xmax, facecolor=(0.2, 0.5, 0.2), alpha=0.1)
 
+    # Add title and axis labels
+    axes.set_title(title, fontsize=14)
+    axes.set_xlabel("Time", fontsize=12)
+    axes.set_ylabel("Value", fontsize=12)
+
     # Allows for nice time-based ticks
     axes.xaxis.set_major_locator(deepcopy(locator))
     axes.tick_params(
@@ -124,6 +130,7 @@ def plot_single_forecast(
         color=(0.7, 0.7, 0.7),
         left=True,
         bottom=True,
+        labelsize=10,  # Increase tick label size
     )
 
 
@@ -159,7 +166,7 @@ def plot_four_forecasts(
     sns.set()
     sns.set_context("paper", font_scale=1)
 
-    fig, axs = plt.subplots(2, 2, figsize=(10, 7))
+    fig, axs = plt.subplots(2, 2, figsize=(20, 14))  # Increased figure size
 
     locator = {
         "day": matplotlib.dates.DayLocator(),
@@ -183,9 +190,10 @@ def plot_four_forecasts(
             target=single_target,
             axes=axs.flat[counter],
             locator=locator,
+            title=f"Forecast {forecast_num + 1}, Series {series_num + 1}",  # Add title to each subplot
         )
         counter += 1
-    plt.subplots_adjust(hspace=0.3)
+    plt.subplots_adjust(hspace=0.4, wspace=0.3)  # Adjust spacing between subplots
 
     # Reorder the legend, and have a unique one for all 4 plots.
     handles, labels = axs.flat[0].get_legend_handles_labels()
@@ -196,4 +204,4 @@ def plot_four_forecasts(
     fig.show()
 
     if savefile:
-        fig.savefig(savefile, bbox_inches="tight", pad_inches=0)
+        fig.savefig(savefile, bbox_inches="tight", pad_inches=0, dpi=300)  # Increased DPI for higher resolution

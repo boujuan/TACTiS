@@ -1,6 +1,3 @@
-# Install tactis if you haven't installed yet
-# !pip install tactis[research]
-
 import torch
 from tactis.gluon.estimator import TACTiSEstimator
 from tactis.gluon.trainer import TACTISTrainer
@@ -27,7 +24,7 @@ metadata, train_data, valid_data = generate_hp_search_datasets("fred_md", histor
 #######################
 
 estimator = TACTiSEstimator(
-    model_parameters = {
+    model_parameters={
         # Marginal CDF Encoder time series embedding dimensions
         "flow_series_embedding_dim": 5,
         # Attentional Copula Encoder time series embedding dimensions
@@ -41,11 +38,11 @@ estimator = TACTiSEstimator(
         "data_normalization": "standardization",
         "loss_normalization": "series",
         "bagging_size": 20,
-        "positional_encoding":{
+        "positional_encoding": {
             "dropout": 0.0,
         },
         # Marginal CDF Encoder parameters
-        "flow_temporal_encoder":{
+        "flow_temporal_encoder": {
             # Marginal CDF Encoder number of transformer layers pairs
             "attention_layers": 1,
             # Marginal CDF Encoder transformer number of heads
@@ -56,7 +53,7 @@ estimator = TACTiSEstimator(
             "dropout": 0.0,
         },
         # Attentional Copula Encoder parameters
-        "copula_temporal_encoder":{
+        "copula_temporal_encoder": {
             # Attentional Copula Encoder number of transformer layers pairs
             "attention_layers": 5,
             # Attentional Copula Encoder transformer number of heads
@@ -66,7 +63,7 @@ estimator = TACTiSEstimator(
             "attention_feedforward_dim": 8,
             "dropout": 0.0,
         },
-        "copula_decoder":{
+        "copula_decoder": {
             "min_u": 0.05,
             "max_u": 0.95,
             "attentional_copula": {
@@ -96,31 +93,32 @@ estimator = TACTiSEstimator(
             },
         },
     },
-    num_series = train_data.list_data[0]["target"].shape[0],
-    history_length = history_factor * metadata.prediction_length,
-    prediction_length = metadata.prediction_length,
-    freq = metadata.freq,
-    trainer = TACTISTrainer(
-        epochs_phase_1 = 20,
-        epochs_phase_2 = 20,
-        batch_size = 256,
-        training_num_batches_per_epoch = 512,
-        learning_rate = 1.7e-3,
-        weight_decay = 1e-3,
-        clip_gradient = 1e3,
-        device = torch.device("cuda:0"),  # Modify device as needed
-        checkpoint_dir = "checkpoints/fred_md_forecasting",
+    num_series=train_data.list_data[0]["target"].shape[0],
+    history_length=history_factor * metadata.prediction_length,
+    prediction_length=metadata.prediction_length,
+    freq=metadata.freq,
+    trainer=TACTISTrainer(
+        epochs_phase_1=20,
+        epochs_phase_2=20,
+        batch_size=256,
+        training_num_batches_per_epoch=512,
+        learning_rate=1e-3,
+        weight_decay=1e-3,  # Phase 1 weight decay
+        clip_gradient=1e3,  # Phase 1 gradient clipping
+        device=torch.device("cuda:0"),
+        checkpoint_dir="checkpoints/fred_md_forecasting",
     ),
-    cdf_normalization = False,
-    num_parallel_samples = 100,
+    cdf_normalization=False,
+    num_parallel_samples=100,
 )
+
 # %%
 #######################
 # CHECKPOINT 3: Training the model
 #######################
 
 # model = estimator.train(
-#     train_data, 
+#     train_data,
 #     valid_data,
 #     num_workers=4,
 #     prefetch_factor=2
@@ -132,36 +130,60 @@ estimator = TACTiSEstimator(
 #######################
 
 backtest_id = 3
-metadata, backtest_train_data, backtest_valid_data = generate_prebacktesting_datasets("fred_md", backtest_id, history_factor)
+metadata, backtest_train_data, backtest_valid_data = generate_prebacktesting_datasets(
+    "fred_md", backtest_id, history_factor
+)
 _, _, backtest_test_data = generate_backtesting_datasets("fred_md", backtest_id, history_factor)
 
-# Train on backtesting dataset
-model = estimator.train(
-    backtest_train_data, 
-    backtest_valid_data,
-    num_workers=4,
-    prefetch_factor=2
-)
+# # Train on backtesting dataset
+# model = estimator.train(
+#     backtest_train_data,
+#     backtest_valid_data,
+#     num_workers=4,
+#     prefetch_factor=2
+# )
 
 # %%
 #######################
 # CHECKPOINT 5: Evaluating NLL on testing dataset
 #######################
 
-nll = estimator.validate(backtest_test_data, backtesting=True)
-print("NLL:", nll.item())
+# Load the best checkpoints for each stage
+checkpoint_dir = "checkpoints/fred_md_forecasting"
+device = torch.device("cuda:0")
+
+# Create a dummy network instance
+trained_net = estimator.create_training_network(device)
+
+# Load the best stage 1 checkpoint
+best_stage_1_ckpt_path = f"{checkpoint_dir}/best_stage_1.pth.tar"
+checkpoint_stage_1 = torch.load(best_stage_1_ckpt_path, map_location=device)
+trained_net.load_state_dict(checkpoint_stage_1["model"])
+estimator.trainer.load_checkpoint = best_stage_1_ckpt_path
+nll_stage_1 = estimator.validate(backtest_test_data, backtesting=True)
+print(f"NLL (Stage 1): {nll_stage_1.item()}")
+
+# Load the best stage 2 checkpoint
+best_stage_2_ckpt_path = f"{checkpoint_dir}/best_stage_2.pth.tar"
+checkpoint_stage_2 = torch.load(best_stage_2_ckpt_path, map_location=device)
+trained_net.load_state_dict(checkpoint_stage_2["model"], strict=False)
+estimator.trainer.load_checkpoint = best_stage_2_ckpt_path
+nll_stage_2 = estimator.validate(backtest_test_data, backtesting=True)
+print(f"NLL (Stage 2): {nll_stage_2.item()}")
 
 # %%
 #######################
 # CHECKPOINT 6: Computing metrics for testing dataset
 #######################
 
+# Use the stage 2 checkpoint for metrics and plotting
+model = trained_net
+
 # Enable copula in model parameters
 estimator.model_parameters["skip_copula"] = False
 
 # Create predictor
 transformation = estimator.create_transformation()
-device = estimator.trainer.device
 predictor = estimator.create_predictor(
     transformation=transformation,
     trained_network=model,
@@ -194,16 +216,13 @@ forecast_it, ts_it = make_evaluation_predictions(
 forecasts = list(forecast_it)
 targets = list(ts_it)
 
-# Note: Plotting functionality removed since this is meant for HPC
-# If you need plots, save the forecasts and targets to analyze later
-
 # %%
 #######################
 # CHECKPOINT 8: Save the model
 #######################
 
 # Save the model
-torch.save(model, "checkpoints/fred_md_forecasting/model.pth")
+# torch.save(model, "checkpoints/fred_md_forecasting/model.pth")
 
 # %%
 #######################
