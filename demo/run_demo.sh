@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -p all_gpu.p
+#SBATCH -p cfdg.p
 #SBATCH -N1
 #SBATCH -n1
 #SBATCH -c32
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:H100:1
-#SBATCH -t 20:0:0
+#SBATCH -t 100:0:0
 #SBATCH -o demo_output.txt
 #SBATCH -e demo_errors.txt
 

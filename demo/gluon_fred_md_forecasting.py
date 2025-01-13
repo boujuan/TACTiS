@@ -10,6 +10,9 @@ from tactis.gluon.plots import plot_four_forecasts
 from gluonts.evaluation.backtest import make_evaluation_predictions
 import warnings
 import random
+import matplotlib
+matplotlib.use('Agg')  # Use a non-interactive backend for plotting in HPC
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 
@@ -101,8 +104,8 @@ estimator = TACTiSEstimator(
     prediction_length = metadata.prediction_length,
     freq = metadata.freq,
     trainer = TACTISTrainer(
-        epochs_phase_1 = 20,
-        epochs_phase_2 = 20,
+        epochs_phase_1 = 150,
+        epochs_phase_2 = 150,
         batch_size = 256,
         training_num_batches_per_epoch = 512,
         learning_rate = 1.7e-3,
@@ -110,6 +113,7 @@ estimator = TACTiSEstimator(
         clip_gradient = 1e3,
         device = torch.device("cuda:0"),  # Modify device as needed
         checkpoint_dir = "checkpoints/fred_md_forecasting",
+        plot_file_path="loss_plot.png"  # Specify the path for the dynamic plot
     ),
     cdf_normalization = False,
     num_parallel_samples = 100,
@@ -231,6 +235,7 @@ def analyze_and_plot_forecasts(forecasts, targets, history_length, savefile_pref
         targets=targets,
         selection=[(0, 10), (0, 20), (0, 30), (0, 40)],
         history_length=history_length,
+        tick_freq="4 months end",
         savefile=f"{savefile_prefix}_forecasts.png"
     )
 

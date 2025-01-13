@@ -52,6 +52,7 @@ class TACTISTrainer(Trainer):
         early_stopping_epochs=-1,
         do_not_restrict_time=False,
         skip_batch_size_search=False,
+        plot_file_path: Optional[str] = None,
     ) -> None:
         """
         When `epochs_phase_1` and `epochs_phase_2` are not specified, training is done for a total of `epochs` epochs, and `early_stopping_epochs` is used to switch from phase 1 to phase 2.
@@ -74,6 +75,15 @@ class TACTISTrainer(Trainer):
         self.early_stopping_epochs = early_stopping_epochs
         self.do_not_restrict_time = do_not_restrict_time
         self.skip_batch_size_search = skip_batch_size_search
+        self.plot_file_path = plot_file_path
+        self.loss_history = {
+            "total_loss": [],
+            "marginal_loss": [],
+            "copula_loss": [],
+            "val_total_loss": [],
+            "val_marginal_loss": [],
+            "val_copula_loss": [],
+        }
 
         if self.checkpoint_dir == None:
             raise Exception("Checkpoint directory (checkpoint_dir) is required to be specified for training.")
@@ -356,6 +366,11 @@ class TACTISTrainer(Trainer):
             avg_epoch_loss_unweighted = cumm_epoch_loss_unweighted / training_num_windows_seen
             print("Epoch:", epoch_no, "Average training loss:", avg_epoch_loss_unweighted)
 
+            #Store loss values in history
+            self.loss_history["total_loss"].append(avg_epoch_loss_unweighted)
+            self.loss_history["marginal_loss"].append(-cumm_marginal_logdet / training_num_windows_seen)
+            self.loss_history["copula_loss"].append(cumm_copula_loss / training_num_windows_seen)
+
             ####### VALIDATION #########
             ####### VALIDATION #########
             ####### VALIDATION #########
@@ -404,6 +419,11 @@ class TACTISTrainer(Trainer):
             avg_epoch_loss_val_unweighted = cumm_epoch_loss_val_unweighted / validation_num_windows_seen
 
             print("Epoch:", epoch_no, "Average validation loss:", avg_epoch_loss_val_unweighted)
+
+            # Store validation loss values in history
+            self.loss_history["val_total_loss"].append(avg_epoch_loss_val_unweighted)
+            self.loss_history["val_marginal_loss"].append(-cumm_marginal_loss_val / validation_num_windows_seen)
+            self.loss_history["val_copula_loss"].append(cumm_copula_loss_val / validation_num_windows_seen)
 
             if best_val_loss_unweighted == None or avg_epoch_loss_val_unweighted < best_val_loss_unweighted:
                 best_val_loss_unweighted = avg_epoch_loss_val_unweighted
@@ -527,6 +547,10 @@ class TACTISTrainer(Trainer):
                     os.path.join(self.checkpoint_dir, filename),
                 )
 
+            # Update plot after each epoch
+            if self.plot_file_path:
+                self.update_loss_plot()
+
             # Increase epoch_no
             epoch_no += 1
 
@@ -578,3 +602,32 @@ class TACTISTrainer(Trainer):
         avg_epoch_loss_val = cumm_epoch_loss_val / validation_num_windows_seen
 
         return avg_epoch_loss_val
+
+    def update_loss_plot(self):
+        """
+        Updates the loss plot with the current loss history.
+        """
+        import matplotlib.pyplot as plt
+
+        plt.figure(figsize=(10, 6))
+
+        # Training losses
+        plt.plot(self.loss_history["total_loss"], label="Train Total Loss")
+        plt.plot(self.loss_history["marginal_loss"], label="Train Marginal Loss")
+        plt.plot(self.loss_history["copula_loss"], label="Train Copula Loss")
+
+        # Validation losses (if available)
+        if self.loss_history["val_total_loss"]:
+            plt.plot(self.loss_history["val_total_loss"], label="Val Total Loss")
+        if self.loss_history["val_marginal_loss"]:
+            plt.plot(self.loss_history["val_marginal_loss"], label="Val Marginal Loss")
+        if self.loss_history["val_copula_loss"]:
+            plt.plot(self.loss_history["val_copula_loss"], label="Val Copula Loss")
+
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Training and Validation Loss")
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(self.plot_file_path, bbox_inches="tight", pad_inches=0, dpi=300)
+        plt.close()
