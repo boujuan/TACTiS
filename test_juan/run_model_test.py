@@ -645,7 +645,7 @@ def get_argument_parser() -> argparse.ArgumentParser:
     print("PyTorch version:", torch.__version__)
     print("PyTorch CUDA version:", torch.version.cuda)
 
-    # Occupy GPU memory to avoid முடியவில்லை: CUDA error: out of memory
+    # Occupy GPU memory to avoid : CUDA error: out of memory
     if args.device != "cpu":
         occupy_memory(args.device)
 

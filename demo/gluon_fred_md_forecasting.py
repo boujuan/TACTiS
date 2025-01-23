@@ -34,11 +34,11 @@ estimator = TACTiSEstimator(
         # Marginal CDF Encoder time series embedding dimensions
         "flow_series_embedding_dim": 5,
         # Attentional Copula Encoder time series embedding dimensions
-        "copula_series_embedding_dim": 8,
+        "copula_series_embedding_dim": 5,
         # Marginal CDF Encoder input encoder layers
-        "flow_input_encoder_layers": 4,
+        "flow_input_encoder_layers": 2,
         # Attentional Copula Encoder input encoder layers
-        "copula_input_encoder_layers": 7,
+        "copula_input_encoder_layers": 2,
         "input_encoding_normalization": True,
         # Data Normalization
         "data_normalization": "standardization",
@@ -50,23 +50,23 @@ estimator = TACTiSEstimator(
         # Marginal CDF Encoder parameters
         "flow_temporal_encoder":{
             # Marginal CDF Encoder number of transformer layers pairs
-            "attention_layers": 1,
+            "attention_layers": 2,
             # Marginal CDF Encoder transformer number of heads
-            "attention_heads": 4,
+            "attention_heads": 1,
             # Marginal CDF Encoder transformer embedding size (per head)
-            "attention_dim": 512,
-            "attention_feedforward_dim": 512,
+            "attention_dim": 16,
+            "attention_feedforward_dim": 16,
             "dropout": 0.0,
         },
         # Attentional Copula Encoder parameters
         "copula_temporal_encoder":{
             # Attentional Copula Encoder number of transformer layers pairs
-            "attention_layers": 5,
+            "attention_layers": 2,
             # Attentional Copula Encoder transformer number of heads
-            "attention_heads": 3,
+            "attention_heads": 1,
             # Attentional Copula Encoder transformer embedding size (per head)
-            "attention_dim": 8,
-            "attention_feedforward_dim": 8,
+            "attention_dim": 16,
+            "attention_feedforward_dim": 16,
             "dropout": 0.0,
         },
         "copula_decoder":{
@@ -74,17 +74,17 @@ estimator = TACTiSEstimator(
             "max_u": 0.95,
             "attentional_copula": {
                 # Decoder transformer number of heads
-                "attention_heads": 4,
+                "attention_heads": 3,
                 # Decoder transformer number of layers
-                "attention_layers": 7,
+                "attention_layers": 1,
                 # Decoder transformer embedding size (per head)
-                "attention_dim": 64,
+                "attention_dim": 8,
                 # Decoder MLP number of layers
                 "mlp_layers": 2,
                 # Decoder MLP hidden dimensions
                 "mlp_dim": 48,
                 # Decoder number of bins in conditional distribution
-                "resolution": 50,
+                "resolution": 20,
                 "activation_function": "relu"
             },
             "dsf_marginal": {
@@ -93,9 +93,9 @@ estimator = TACTiSEstimator(
                 # Decoder MLP hidden dimensions
                 "mlp_dim": 48,
                 # Decoder DSF number of layers
-                "flow_layers": 6,
+                "flow_layers": 2,
                 # Decoder DSF hidden dimensions
-                "flow_hid_dim": 48,
+                "flow_hid_dim": 8,
             },
         },
     },
@@ -104,12 +104,12 @@ estimator = TACTiSEstimator(
     prediction_length = metadata.prediction_length,
     freq = metadata.freq,
     trainer = TACTISTrainer(
-        epochs_phase_1 = 150,
-        epochs_phase_2 = 150,
+        epochs_phase_1 = 20,
+        epochs_phase_2 = 20,
         batch_size = 256,
         training_num_batches_per_epoch = 512,
-        learning_rate = 1.7e-3,
-        weight_decay = 1e-3,
+        learning_rate = 1e-3,
+        weight_decay = 1e-4,
         clip_gradient = 1e3,
         device = torch.device("cuda:0"),  # Modify device as needed
         checkpoint_dir = "checkpoints/fred_md_forecasting",

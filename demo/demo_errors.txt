@@ -1,0 +1,8 @@
+/user/taed7566/.conda/envs/tactis_cuda/lib/python3.10/site-packages/pandas/plotting/_matplotlib/core.py:887: UserWarning: This axis already has a converter set and is updating to a potentially incompatible converter
+  return ax.plot(*args, **kwds)
+/user/taed7566/.conda/envs/tactis_cuda/lib/python3.10/site-packages/pandas/plotting/_matplotlib/core.py:887: UserWarning: This axis already has a converter set and is updating to a potentially incompatible converter
+  return ax.plot(*args, **kwds)
+/user/taed7566/.conda/envs/tactis_cuda/lib/python3.10/site-packages/pandas/plotting/_matplotlib/core.py:887: UserWarning: This axis already has a converter set and is updating to a potentially incompatible converter
+  return ax.plot(*args, **kwds)
+/user/taed7566/.conda/envs/tactis_cuda/lib/python3.10/site-packages/pandas/plotting/_matplotlib/core.py:887: UserWarning: This axis already has a converter set and is updating to a potentially incompatible converter
+  return ax.plot(*args, **kwds)

@@ -20,3 +20,4 @@ conda activate tactis_cuda
 python gluon_fred_md_forecasting.py
 
 # sbatch run_demo.sh
+# sbatch -p all_gpu.p -N1 -n1 -c32 --mem=64G --gres=gpu:H100:1 -t 20:0:0 run_model.sh

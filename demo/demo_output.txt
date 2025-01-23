@@ -1,0 +1,464 @@
+Checkpoints will be saved at checkpoints/fred_md_forecasting
+Performing a batch size search with 10 iterations.
+Initial batch size: 256
+Using a batch size of: 256
+Start epoch: 0
+Total Epochs: 40
+Flow loss weight: 1.0
+Copula loss weight: 0.0
+Epoch: 0 / 40
+Training.
+Total number of training batches: 512
+Epoch: 0 Average training loss: 195.3557765655815
+Validation.
+Total number of validation batches: 1
+Epoch: 0 Average validation loss: 22.083587646484375
+Epochs since best epoch: 0
+Checkpoint of epoch 0 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 0 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 1 / 40
+Training.
+Total number of training batches: 512
+Epoch: 1 Average training loss: 14.304743852299325
+Validation.
+Total number of validation batches: 1
+Epoch: 1 Average validation loss: 20.550519943237305
+Epochs since best epoch: 0
+Checkpoint of epoch 1 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 1 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 2 / 40
+Training.
+Total number of training batches: 512
+Epoch: 2 Average training loss: 13.500543335957369
+Validation.
+Total number of validation batches: 1
+Epoch: 2 Average validation loss: 22.726600646972656
+Epochs since best epoch: 1
+Checkpoint of epoch 2 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 3 / 40
+Training.
+Total number of training batches: 512
+Epoch: 3 Average training loss: 13.158879586827686
+Validation.
+Total number of validation batches: 1
+Epoch: 3 Average validation loss: 18.987079620361328
+Epochs since best epoch: 0
+Checkpoint of epoch 3 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 3 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 4 / 40
+Training.
+Total number of training batches: 512
+Epoch: 4 Average training loss: 12.94225238034135
+Validation.
+Total number of validation batches: 1
+Epoch: 4 Average validation loss: 19.38502311706543
+Epochs since best epoch: 1
+Checkpoint of epoch 4 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 5 / 40
+Training.
+Total number of training batches: 512
+Epoch: 5 Average training loss: 12.743742491069593
+Validation.
+Total number of validation batches: 1
+Epoch: 5 Average validation loss: 22.409290313720703
+Epochs since best epoch: 2
+Checkpoint of epoch 5 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 6 / 40
+Training.
+Total number of training batches: 512
+Epoch: 6 Average training loss: 12.593102408663803
+Validation.
+Total number of validation batches: 1
+Epoch: 6 Average validation loss: 18.70580291748047
+Epochs since best epoch: 0
+Checkpoint of epoch 6 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 6 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 7 / 40
+Training.
+Total number of training batches: 512
+Epoch: 7 Average training loss: 12.457129701536301
+Validation.
+Total number of validation batches: 1
+Epoch: 7 Average validation loss: 18.58362579345703
+Epochs since best epoch: 0
+Checkpoint of epoch 7 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 7 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 8 / 40
+Training.
+Total number of training batches: 512
+Epoch: 8 Average training loss: 12.308798271313048
+Validation.
+Total number of validation batches: 1
+Epoch: 8 Average validation loss: 24.977436065673828
+Epochs since best epoch: 1
+Checkpoint of epoch 8 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 9 / 40
+Training.
+Total number of training batches: 512
+Epoch: 9 Average training loss: 12.173382779543395
+Validation.
+Total number of validation batches: 1
+Epoch: 9 Average validation loss: 15.486955642700195
+Epochs since best epoch: 0
+Checkpoint of epoch 9 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 9 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 10 / 40
+Training.
+Total number of training batches: 512
+Epoch: 10 Average training loss: 12.078119105065776
+Validation.
+Total number of validation batches: 1
+Epoch: 10 Average validation loss: 19.373767852783203
+Epochs since best epoch: 1
+Checkpoint of epoch 10 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 11 / 40
+Training.
+Total number of training batches: 512
+Epoch: 11 Average training loss: 11.991008862649721
+Validation.
+Total number of validation batches: 1
+Epoch: 11 Average validation loss: 16.308752059936523
+Epochs since best epoch: 2
+Checkpoint of epoch 11 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 12 / 40
+Training.
+Total number of training batches: 512
+Epoch: 12 Average training loss: 11.877795074418275
+Validation.
+Total number of validation batches: 1
+Epoch: 12 Average validation loss: 26.72108268737793
+Epochs since best epoch: 3
+Checkpoint of epoch 12 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 13 / 40
+Training.
+Total number of training batches: 512
+Epoch: 13 Average training loss: 11.811513218498602
+Validation.
+Total number of validation batches: 1
+Epoch: 13 Average validation loss: 14.886027336120605
+Epochs since best epoch: 0
+Checkpoint of epoch 13 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+Checkpoint of epoch 13 saved at checkpoints/fred_md_forecasting/best_stage_1.pth.tar
+
+
+Epoch: 14 / 40
+Training.
+Total number of training batches: 512
+Epoch: 14 Average training loss: 11.725071628191317
+Validation.
+Total number of validation batches: 1
+Epoch: 14 Average validation loss: 20.581533432006836
+Epochs since best epoch: 1
+Checkpoint of epoch 14 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 15 / 40
+Training.
+Total number of training batches: 512
+Epoch: 15 Average training loss: 11.63619635026125
+Validation.
+Total number of validation batches: 1
+Epoch: 15 Average validation loss: 28.627920150756836
+Epochs since best epoch: 2
+Checkpoint of epoch 15 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 16 / 40
+Training.
+Total number of training batches: 512
+Epoch: 16 Average training loss: 11.555739597967493
+Validation.
+Total number of validation batches: 1
+Epoch: 16 Average validation loss: 18.540128707885742
+Epochs since best epoch: 3
+Checkpoint of epoch 16 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 17 / 40
+Training.
+Total number of training batches: 512
+Epoch: 17 Average training loss: 11.489466038828473
+Validation.
+Total number of validation batches: 1
+Epoch: 17 Average validation loss: 24.09462547302246
+Epochs since best epoch: 4
+Checkpoint of epoch 17 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 18 / 40
+Training.
+Total number of training batches: 512
+Epoch: 18 Average training loss: 11.374296569452415
+Validation.
+Total number of validation batches: 1
+Epoch: 18 Average validation loss: 15.752026557922363
+Epochs since best epoch: 5
+Checkpoint of epoch 18 saved at checkpoints/fred_md_forecasting/last_stage_1.pth.tar
+
+
+Epoch: 19 / 40
+Training.
+Total number of training batches: 512
+Epoch: 19 Average training loss: 11.293791006880197
+Validation.
+Total number of validation batches: 1
+Epoch: 19 Average validation loss: 20.93587303161621
+Epochs since best epoch: 6
+20 epochs completed in stage 1. Shifting to stage 2.
+Loading the best model so far.
+Switching to stage 2
+Epoch: 20 / 40
+Training.
+Total number of training batches: 512
+Epoch: 20 Average training loss: 11.062560249722724
+Validation.
+Total number of validation batches: 1
+Epoch: 20 Average validation loss: 17.849727630615234
+Epochs since best epoch: 0
+Checkpoint of epoch 20 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+Checkpoint of epoch 20 saved at checkpoints/fred_md_forecasting/best_stage_2.pth.tar
+
+
+Epoch: 21 / 40
+Training.
+Total number of training batches: 512
+Epoch: 21 Average training loss: 6.267375365102965
+Validation.
+Total number of validation batches: 1
+Epoch: 21 Average validation loss: 11.399643898010254
+Epochs since best epoch: 0
+Checkpoint of epoch 21 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+Checkpoint of epoch 21 saved at checkpoints/fred_md_forecasting/best_stage_2.pth.tar
+
+
+Epoch: 22 / 40
+Training.
+Total number of training batches: 512
+Epoch: 22 Average training loss: 4.263694368607816
+Validation.
+Total number of validation batches: 1
+Epoch: 22 Average validation loss: 12.543667793273926
+Epochs since best epoch: 1
+Checkpoint of epoch 22 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 23 / 40
+Training.
+Total number of training batches: 512
+Epoch: 23 Average training loss: 3.550781549301296
+Validation.
+Total number of validation batches: 1
+Epoch: 23 Average validation loss: 6.28009033203125
+Epochs since best epoch: 0
+Checkpoint of epoch 23 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+Checkpoint of epoch 23 saved at checkpoints/fred_md_forecasting/best_stage_2.pth.tar
+
+
+Epoch: 24 / 40
+Training.
+Total number of training batches: 512
+Epoch: 24 Average training loss: 3.1192519729829904
+Validation.
+Total number of validation batches: 1
+Epoch: 24 Average validation loss: 21.23702621459961
+Epochs since best epoch: 1
+Checkpoint of epoch 24 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 25 / 40
+Training.
+Total number of training batches: 512
+Epoch: 25 Average training loss: 2.769435333229645
+Validation.
+Total number of validation batches: 1
+Epoch: 25 Average validation loss: 8.108415603637695
+Epochs since best epoch: 2
+Checkpoint of epoch 25 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 26 / 40
+Training.
+Total number of training batches: 512
+Epoch: 26 Average training loss: 2.562059998512268
+Validation.
+Total number of validation batches: 1
+Epoch: 26 Average validation loss: 12.063469886779785
+Epochs since best epoch: 3
+Checkpoint of epoch 26 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 27 / 40
+Training.
+Total number of training batches: 512
+Epoch: 27 Average training loss: 2.392164006800215
+Validation.
+Total number of validation batches: 1
+Epoch: 27 Average validation loss: 14.003317832946777
+Epochs since best epoch: 4
+Checkpoint of epoch 27 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 28 / 40
+Training.
+Total number of training batches: 512
+Epoch: 28 Average training loss: 2.2160667917649417
+Validation.
+Total number of validation batches: 1
+Epoch: 28 Average validation loss: 15.258907318115234
+Epochs since best epoch: 5
+Checkpoint of epoch 28 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 29 / 40
+Training.
+Total number of training batches: 512
+Epoch: 29 Average training loss: 2.116010966356735
+Validation.
+Total number of validation batches: 1
+Epoch: 29 Average validation loss: 10.75299072265625
+Epochs since best epoch: 6
+Checkpoint of epoch 29 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 30 / 40
+Training.
+Total number of training batches: 512
+Epoch: 30 Average training loss: 2.0365238317504497
+Validation.
+Total number of validation batches: 1
+Epoch: 30 Average validation loss: 10.083802223205566
+Epochs since best epoch: 7
+Checkpoint of epoch 30 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 31 / 40
+Training.
+Total number of training batches: 512
+Epoch: 31 Average training loss: 1.9689087290280511
+Validation.
+Total number of validation batches: 1
+Epoch: 31 Average validation loss: 13.608270645141602
+Epochs since best epoch: 8
+Checkpoint of epoch 31 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 32 / 40
+Training.
+Total number of training batches: 512
+Epoch: 32 Average training loss: 1.9208522289119967
+Validation.
+Total number of validation batches: 1
+Epoch: 32 Average validation loss: 5.802032470703125
+Epochs since best epoch: 0
+Checkpoint of epoch 32 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+Checkpoint of epoch 32 saved at checkpoints/fred_md_forecasting/best_stage_2.pth.tar
+
+
+Epoch: 33 / 40
+Training.
+Total number of training batches: 512
+Epoch: 33 Average training loss: 1.8787404354552777
+Validation.
+Total number of validation batches: 1
+Epoch: 33 Average validation loss: 12.952675819396973
+Epochs since best epoch: 1
+Checkpoint of epoch 33 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 34 / 40
+Training.
+Total number of training batches: 512
+Epoch: 34 Average training loss: 1.8151074541010122
+Validation.
+Total number of validation batches: 1
+Epoch: 34 Average validation loss: 12.24796199798584
+Epochs since best epoch: 2
+Checkpoint of epoch 34 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 35 / 40
+Training.
+Total number of training batches: 512
+Epoch: 35 Average training loss: 1.621517716560215
+Validation.
+Total number of validation batches: 1
+Epoch: 35 Average validation loss: 7.317294120788574
+Epochs since best epoch: 3
+Checkpoint of epoch 35 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 36 / 40
+Training.
+Total number of training batches: 512
+Epoch: 36 Average training loss: 1.5876047499695716
+Validation.
+Total number of validation batches: 1
+Epoch: 36 Average validation loss: 4.436271667480469
+Epochs since best epoch: 0
+Checkpoint of epoch 36 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+Checkpoint of epoch 36 saved at checkpoints/fred_md_forecasting/best_stage_2.pth.tar
+
+
+Epoch: 37 / 40
+Training.
+Total number of training batches: 512
+Epoch: 37 Average training loss: 1.547216665791257
+Validation.
+Total number of validation batches: 1
+Epoch: 37 Average validation loss: 13.083081245422363
+Epochs since best epoch: 1
+Checkpoint of epoch 37 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 38 / 40
+Training.
+Total number of training batches: 512
+Epoch: 38 Average training loss: 1.405866587719722
+Validation.
+Total number of validation batches: 1
+Epoch: 38 Average validation loss: 5.2964067459106445
+Epochs since best epoch: 2
+Checkpoint of epoch 38 saved at checkpoints/fred_md_forecasting/last_stage_2.pth.tar
+
+
+Epoch: 39 / 40
+Training.
+Total number of training batches: 512
+Epoch: 39 Average training loss: 1.3914346450950668
+Validation.
+Total number of validation batches: 1
+Epoch: 39 Average validation loss: 8.33268928527832
+Epochs since best epoch: 3
+20 epochs completed in stage 2. Stopping training.
+Loading the best model so far.
+Validation...
+Creating a validation dataloader with a batch size of 256
+NLL: 30.4929256439209
+Using batch size: 16
+Metrics: {'CRPS': 0.05036607768585403, 'ND': 0.06884444763438378, 'NRMSE': 0.7366667394085195, 'MSE': 1317527892.675932, 'CRPS-Sum': 0.04971783467706464, 'ND-Sum': 0.06715315679170047, 'NRMSE-Sum': 0.07744656245484206, 'MSE-Sum': 166720722261.33334, 'num_nan': 0, 'num_inf': 0}
